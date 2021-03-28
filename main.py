@@ -46,15 +46,14 @@ def es_entry_point(walletid):
     # Connect to the elastic cluster
     es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-    r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(walletid))
-    result = r.json()
-
     while True:
+        r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(walletid))
+        result = r.json()
         readable = datetime.fromtimestamp(result['updatedAt'] * 0.001, pytz.UTC).isoformat()
         write_global(result, readable, es)
         write_pay(result['payments'], readable, es)
         write_worker(result['workers'], readable, es)
-        time.sleep(30)
+        time.sleep(10)
 
 
 @cli.app.CommandLineApp(name='2miner-monitoring')
