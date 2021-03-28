@@ -1,0 +1,9 @@
+certifi==2020.12.5
+chardet==4.0.0
+elasticsearch==7.12.0
+idna==2.10
+prometheus-client==0.9.0
+pyCLI==2.0.3
+pytz==2021.1
+requests==2.25.1
+urllib3==1.26.4
