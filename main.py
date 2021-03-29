@@ -43,6 +43,19 @@ def write_global(item, readable, es):
     logging.debug(es.index(index='2miner', body=global_info))
 
 
+def write_stats(item, readable, es):
+    stats = {
+        "balance": item['balance'],
+        "blocksFound": item['blocksFound'],
+        "immature": item['immature'],
+        "lastShare": item['lastShare'],
+        "paid": item['paid'],
+        "Date": readable,
+        "pending": item['pending']
+    }
+    logging.debug(es.index(index='stats', body=stats))
+
+
 def es_entry_point(walletid):
     # Connect to the elastic cluster
     es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
@@ -56,12 +69,15 @@ def es_entry_point(walletid):
         write_global(result, readable, es)
         write_pay(result['payments'], readable, es)
         write_worker(result['workers'], readable, es)
+        write_stats(result['stats'], readable, es)
         time.sleep(10)
+
 
 def set_log_lvl(log_lvl):
     if log_lvl == 'INFO':
         return logging.INFO
     return logging.debug
+
 
 @cli.app.CommandLineApp(name='2miner-monitoring')
 def main(app):
