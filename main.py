@@ -44,16 +44,19 @@ def write_global(item, readable, es):
 
 
 def write_stats(item, readable, es):
+    bfound = 0
+    #if item['blocksFound'] is not None: TODO: why that does not work
+    #    bfound = item['blocksFound']
     stats = {
-        "balance": item['balance'],
-        "blocksFound": item['blocksFound'],
+        "balance": item['balance'] * bounty_factor,
+        "blocksFound": bfound,
         "immature": item['immature'],
         "lastShare": item['lastShare'],
-        "paid": item['paid'],
+        "paid": item['paid'] * bounty_factor,
         "Date": readable,
         "pending": item['pending']
     }
-    logging.debug(es.index(index='stats', body=stats))
+    logging.debug(es.index(index='eth_stats', body=stats))
 
 
 def es_entry_point(walletid):
