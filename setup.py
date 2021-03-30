@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='2miner-monitoring',
     version='0.0.1',
-    packages=[''],
+    packages=['2miner-monitoring'],
     url='https://github.com/Tocard/2miner-monitoring',
     license='MIT',
     author='Goudot',
