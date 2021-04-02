@@ -4,22 +4,61 @@ from elasticsearch import Elasticsearch
 import time
 import pytz
 import logging
+from etherscan_api import get_ether_transactions_by_wallet, get_ether_wallet_amount, get_ether_gaz_price
 
 factor = 0.000001
 bounty_factor = 0.000000001
+ether_factor = 0.000000000000000001
+
+global es
 
 
-def write_pay(item, readable, es):
+def write_to_es(index, body):
+    try:
+        logging.debug(es.index(index=index, body=body))
+    except:
+        logging.error('unable to write on elasticsearch')
+
+
+def write_pay(item):
+    es.indices.delete(index='bounty', ignore=[400, 404])
     for pay in item:
+        readable = datetime.fromtimestamp(pay['timestamp'], pytz.UTC).isoformat()
         bounty = {
-            "Amount": pay['amount'] * bounty_factor,
-            "pay_date": pay['timestamp'],
-            "Date": readable
+            "amount": pay['amount'] * bounty_factor,
+            "Date": readable,
         }
-        logging.debug(es.index(index='bounty', body=bounty))
+        write_to_es('bounty', bounty)
 
 
-def write_worker(item, readable, es):
+def write_transactions(walletid):
+    es.indices.delete(index='transaction', ignore=[400, 404])
+    transactions = get_ether_transactions_by_wallet(walletid)
+    for transaction in transactions:
+        readable = datetime.fromtimestamp(transaction['timestamp'], pytz.UTC).isoformat()
+        writable_transaction = {
+            "Date": readable,
+            "value": transaction['value'] * ether_factor,
+            "gas": transaction['gas'],
+            "to": transaction['to'],
+            "from": transaction['from'],
+            "gas_price": transaction['gas_price'],
+            "gas_used": transaction['gas_used'],
+            "is_error": transaction['is_error']
+        }
+        write_to_es('transaction', writable_transaction)
+
+
+def write_wallet(readable, walletid, market_price):
+    wallet = {
+        "ether_amount": get_ether_wallet_amount(walletid),
+        "ether_current_price": market_price['EUR']['last'],
+        "Date": readable
+    }
+    write_to_es('wallet', wallet)
+
+
+def write_worker(item, readable):
     for miner in item:
         farm = {
             "Miner": miner,
@@ -27,10 +66,10 @@ def write_worker(item, readable, es):
             "offline": item[miner]['offline'],
             "Date": readable
         }
-        logging.debug(es.index(index='miner', body=farm))
+        write_to_es('miner', farm)
 
 
-def write_global(item, readable, es, market_price):
+def write_global(item, readable, market_price):
     global_info = {
         "Global_hashrate": item['currentHashrate'] * factor,
         "paiement": item['paymentsTotal'],
@@ -40,12 +79,12 @@ def write_global(item, readable, es, market_price):
         "workersTotal": item['workersTotal'],
         "eth_price": market_price['EUR']['last']
     }
-    logging.debug(es.index(index='2miner', body=global_info))
+    write_to_es('2miner', global_info)
 
 
-def write_stats(item, readable, es, market_price):
+def write_stats(item, readable, market_price):
     bfound = 0
-    #if item['blocksFound'] is not None: TODO: why that does not work
+    # if item['blocksFound'] is not None: TODO: why that does not work
     #    bfound = item['blocksFound']
     stats = {
         "balance": item['balance'] * bounty_factor,
@@ -57,17 +96,22 @@ def write_stats(item, readable, es, market_price):
         "pending": item['pending'],
         "eth_price": market_price['EUR']['last']
     }
-    logging.debug(es.index(index='eth_stats', body=stats))
+    write_to_es('eth_stats', stats)
 
 
-def es_entry_point(walletid, user, password, es_host, es_port):
+def es_connection(user, password, es_host, es_port):
     # Connect to the elastic cluster
+    global es
     es = Elasticsearch(
         [es_host],
         http_auth=(user, password),
         port=es_port,
     )
     logging.info(es.info())
+
+
+def es_entry_point(walletid, user, password, es_host, es_port):
+    es_connection(user, password, es_host, es_port)
 
     while True:
         currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(walletid))
@@ -78,8 +122,11 @@ def es_entry_point(walletid, user, password, es_host, es_port):
         logging.info('{} {}'.format(r.status_code, r.url))
         result = r.json()
         readable = datetime.fromtimestamp(result['updatedAt'] * 0.001, pytz.UTC).isoformat()
-        write_global(result, readable, es, market_price)
-        write_pay(result['payments'], readable, es)
-        write_worker(result['workers'], readable, es)
-        write_stats(result['stats'], readable, es, market_price)
+        write_global(result, readable, market_price)
+        write_worker(result['workers'], readable)
+        write_stats(result['stats'], readable, market_price)
+        write_wallet(readable, walletid, market_price)
+        write_pay(result['payments'])
+        write_transactions(walletid)
+        r.close()
         time.sleep(10)
