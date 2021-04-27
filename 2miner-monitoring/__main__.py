@@ -20,7 +20,7 @@ def main(app):
 main.add_param("-w", "--wallet", type=str, help="wallet id", required=True)
 main.add_param("-u", "--user", type=str, help="user for es connection")
 main.add_param("-p", "--password", type=str, help="password for es connection")
-main.add_param("-eh", "--es_host", type=str, help="es hosts connection", default='localhost')
+main.add_param("-eh", "--es_host", type=str, help="es hosts connection", default='192.168.1.91')
 main.add_param("-ep", "--es_port", type=str, help="es port connection", default=9200)
 main.add_param("-a", "--api_token_etherscan", type=str, help="api token for etherscan")
 main.add_param("-l", "--log_level", type=str, help="Log Level", default='INFO')

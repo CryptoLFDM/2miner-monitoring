@@ -10,7 +10,26 @@ factor = 0.000001
 bounty_factor = 0.000000001
 ether_factor = 0.000000000000000001
 
+Computers = {
+    "Goudot": {
+        "DESKTOP-T0SIC8V": "3060TI",
+        "DESKTOP-S2F50O3": "3070",
+        "DESKTOP-S9JBEI4": "3070",
+    },
+    "Rollet": {
+        "DESKTOP-D14KDS8": "3070",
+        "DESKTOP-0UVPTDO": "3070",
+    }
+}
+
 global es
+
+def get_computer_info(name):
+    for owner in Computers:
+        for computer in Computers[owner]:
+            if computer == name:
+                return [owner, Computers[owner][computer]]
+    return ["no_owner", "no_gpu_record"]
 
 
 def write_to_es(index, body):
@@ -49,6 +68,14 @@ def write_transactions(walletid):
         write_to_es('transaction', writable_transaction)
 
 
+def write_gas():
+    gas = {
+        "Date": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+        "gas_price": get_ether_gaz_price(),
+    }
+    write_to_es('gas', gas)
+
+
 def write_wallet(readable, walletid, market_price):
     wallet = {
         "ether_amount": get_ether_wallet_amount(walletid),
@@ -60,11 +87,14 @@ def write_wallet(readable, walletid, market_price):
 
 def write_worker(item, readable):
     for miner in item:
+        computer_info = get_computer_info(miner)
         farm = {
             "Miner": miner,
             "Global_hashrate": item[miner]['hr'] * factor,
             "offline": item[miner]['offline'],
-            "Date": readable
+            "Date": readable,
+            "owner" : computer_info[0],
+            "gpu": computer_info[1],
         }
         write_to_es('miner', farm)
 
@@ -114,19 +144,23 @@ def es_entry_point(walletid, user, password, es_host, es_port):
     es_connection(user, password, es_host, es_port)
 
     while True:
-        currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(walletid))
-        logging.info('{} {}'.format(currency.status_code, currency.url))
-        market_price = currency.json()
+        try:
+            currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(walletid))
+            logging.info('{} {}'.format(currency.status_code, currency.url))
+            market_price = currency.json()
 
-        r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(walletid))
-        logging.info('{} {}'.format(r.status_code, r.url))
-        result = r.json()
-        readable = datetime.fromtimestamp(result['updatedAt'] * 0.001, pytz.UTC).isoformat()
-        write_global(result, readable, market_price)
-        write_worker(result['workers'], readable)
-        write_stats(result['stats'], readable, market_price)
-        write_wallet(readable, walletid, market_price)
-        write_pay(result['payments'])
-        write_transactions(walletid)
-        r.close()
-        time.sleep(10)
+            r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(walletid))
+            logging.info('{} {}'.format(r.status_code, r.url))
+            result = r.json()
+            readable = datetime.fromtimestamp(result['updatedAt'] * 0.001, pytz.UTC).isoformat()
+            write_global(result, readable, market_price)
+            write_worker(result['workers'], readable)
+            write_stats(result['stats'], readable, market_price)
+            write_wallet(readable, walletid, market_price)
+            write_pay(result['payments'])
+            write_transactions(walletid)
+            write_gas()
+            r.close()
+            time.sleep(10)
+        except:
+            pass
