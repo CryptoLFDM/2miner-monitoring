@@ -12,6 +12,7 @@ def set_log_lvl(log_lvl):
 @cli.app.CommandLineApp(name='2miner-monitoring')
 def main(app):
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl(app.params.log_level))
+    logging.info("{} {} {} {} {} {}".format(app.params.wallet, app.params.user, app.params.password, app.params.es_host, app.params.es_port, app.params.api_token_etherscan))
     set_etherscan_api(app.params.api_token_etherscan)
     es_entry_point(app.params.wallet, app.params.user, app.params.password, app.params.es_host, app.params.es_port)
 
