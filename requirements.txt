@@ -1,12 +1,8 @@
-certifi==2020.12.5
-chardet==4.0.0
 elasticsearch==7.12.0
-idna==2.10
-pyCLI==2.0.3
 pytz==2021.1
 requests==2.25.1
-urllib3==1.26.4
 
 setuptools~=57.0.0
 etherscan~=0.3.0
-requests-cache==0.4.10
+PyYAML~=5.4.1
+pyCLI==2.0.3

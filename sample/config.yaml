@@ -1,0 +1,68 @@
+---
+wallet: "your_wallet"
+elasticsearch_user: "User given by Mozquito"
+elasticsearch_password: "Password of Mozquito's user"
+elasticsearch_host: "https://grafana.ether-source.fr"
+elasticsearch_port: 9201
+api_token_etherscan: "etherscan token api "
+log_level: INFO
+ca_path: "ssl/autority_chain.pem"
+
+
+#rig:
+#- rig_name: "DESKTOP-TFG67DF"   set key as nam rig
+#  cards: ["3060TI"]  list of cards in rig.
+#  owners:             dict of owner of the rig
+#   - name: "Mozquito"   name of the owner
+#     ratio: 100         % of ownership
+#- rig_name: "Rig_chamber":
+#  cards: ["3070", "3070", "3070", "3070"]
+#  owners:
+#   - name: "Mozquito"
+#     ratio: 73
+#   - name: "Baby Mozquito"
+#     ratio: 23
+
+rig:
+- rig_name: "DESKTOP-T0SIC8V"
+  cards: ["3060TI"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-S2F50O3"
+  cards: ["3070"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-1O4VIJC"
+  cards: ["3070"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-6JI75RL"
+  cards: ["3070"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-1R35NEA"
+  cards: ["2070"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-160G6L9"
+  cards: ["3090"]
+  owners:
+    - name: "Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-D14KDS8"
+  cards: ["3070"]
+  owners:
+    - name: "Misses Mozquito"
+      ratio: 100
+- rig_name: "DESKTOP-0UVPTDO"
+  cards: ["3070"]
+  owners:
+    - name: "Misses Mozquito"
+      ratio: 100
+
+

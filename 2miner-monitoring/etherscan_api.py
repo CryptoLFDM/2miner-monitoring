@@ -14,6 +14,7 @@ def set_etherscan_api(api_key):
 def get_ether_balance(walletid):
     logging.log(ETHER.get_eth_balances(walletid))
 
+
 def get_ether_transactions_by_wallet(walletid):
     return ETHER.get_transactions_by_address(walletid)
 

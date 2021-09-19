@@ -14,55 +14,71 @@ bounty_factor = 0.000000001
 ether_factor = 0.000000000000000001
 gas_factor = 0.000000001
 
-Computers = {
-    "Goudot": {
-        "DESKTOP-T0SIC8V": "3060TI",
-        "DESKTOP-S2F50O3": "3070",
-        "DESKTOP-1O4VIJC": "3070",
-        "DESKTOP-6JI75RL": "3070",
-        "DESKTOP-1R35NEA": "2070",
-        "DESKTOP-160G6L9": "3090",
-    },
-    "Rollet": {
-        "DESKTOP-D14KDS8": "3070",
-        "DESKTOP-0UVPTDO": "3070",
-    }
-}
-
 global es
-
-def get_computer_info(name):
-    for owner in Computers:
-        for computer in Computers[owner]:
-            if computer == name:
-                return [owner, Computers[owner][computer]]
-    return ["no_owner", "no_gpu_record"]
+global cfg
 
 
-def write_to_es(index, body):
+def get_rig_info(rig_name):
+    for rig in cfg['rig']:
+        if rig['rig_name'] == rig_name:
+            return rig
+    return None
+
+
+def get_gpus(rig_name):
+    rig = get_rig_info(rig_name)
+    if rig is None:
+        return ['No_GPU_FOUND']
+    cards_list = []
+    for card in rig['cards']:
+        cards_list.append(card)
+    return cards_list
+
+
+def get_owners(rig_name):
+    rig = get_rig_info(rig_name)
+    if rig is None:
+        return {'Name': 'unknown', 'parts': 0}
+    owners = {}
+    for owner in rig['owners']:
+        owners['name'] = owner['name']
+        owners['part'] = owner['ratio']
+    return owners
+
+
+def write_to_elasticsearch_index(index, body):
+    index_name = '{}-{}-2miners-monitoring'.format(cfg['elasticsearch_user'], index)
     try:
-        logging.debug(es.index(index=index, body=body))
+        logging.debug(es.index(index=index_name, body=body))
     except:
         logging.error('unable to write on elasticsearch')
 
 
-def write_pay(item):
-    es.indices.delete(index='bounty', ignore=[400, 404])
+def delete_index_elasticsearch(index):
+    index_name = '{}-{}-2miners-monitoring'.format(cfg['elasticsearch_user'], index)
+    try:
+        logging.debug(es.indices.delete(index='transaction', ignore=[400, 404]))
+    except:
+        logging.error('Unable to delete index {}'.format(index_name))
+
+
+def write_pay(item, clock_time):
+    delete_index_elasticsearch(index='bounty')
     for pay in item:
 
         bounty = {
             "amount": pay['amount'] * bounty_factor,
-            "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+            "@timestamp": clock_time
         }
-        write_to_es('bounty', bounty)
+        write_to_elasticsearch_index('bounty', bounty)
 
 
-def write_transactions(walletid):
-    es.indices.delete(index='transaction', ignore=[400, 404])
+def write_transactions(walletid, clock_time):
+    delete_index_elasticsearch(index='transaction')
     transactions = get_ether_transactions_by_wallet(walletid)
     for transaction in transactions:
         writable_transaction = {
-            "@timestamp": datetime.fromtimestamp(transaction['timestamp'], pytz.UTC).isoformat(),
+            "@timestamp": clock_time,
             "value": transaction['value'] * ether_factor,
             "gas": transaction['gas'],
             "to": transaction['to'],
@@ -71,85 +87,54 @@ def write_transactions(walletid):
             "gas_used": transaction['gas_used'],
             "is_error": transaction['is_error']
         }
-        write_to_es('transaction', writable_transaction)
+        write_to_elasticsearch_index('transaction', writable_transaction)
 
 
-def write_gas():
+def write_gas(clock_time):
     gas = {
-        "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
-        "gas_price": get_ether_gaz_price() * gas_factor,
+        "@timestamp": clock_time,
+        "gas_price": get_ether_gaz_price() * gas_factor
     }
     logging.info(gas)
-    write_to_es('gas', gas)
+    write_to_elasticsearch_index('gas', gas)
 
 
-def write_wallet(walletid, market_price):
+def write_wallet(walletid, market_price, clock_time):
     wallet = {
         "ether_amount": get_ether_wallet_amount(walletid) * ether_factor,
         "ether_current_price": market_price['EUR']['last'],
-        "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+        "@timestamp": clock_time
     }
-    write_to_es('wallet', wallet)
+    write_to_elasticsearch_index('wallet', wallet)
 
 
-def write_worker(item):
+def write_worker(item, clock_time):
     for miner in item:
-        computer_info = get_computer_info(miner)
         farm = {
             "Miner": miner,
             "Global_hashrate": item[miner]['hr'] * factor,
             "offline": item[miner]['offline'],
-            "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
-            "owner": computer_info[0],
-            "gpu": computer_info[1],
+            "@timestamp": clock_time,
+            "owner": get_owners(miner),
+            "gpu": get_gpus(miner)
         }
-        write_to_es('miner', farm)
+        write_to_elasticsearch_index('miner', farm)
 
 
-def write_global(item, market_price):
+def write_global(item, market_price, clock_time):
     global_info = {
         "Global_hashrate": item['currentHashrate'] * factor,
         "paiement": item['paymentsTotal'],
-        "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+        "@timestamp": clock_time,
         "workersOnline": item['workersOnline'],
         "workersOffline": item['workersOffline'],
         "workersTotal": item['workersTotal'],
         "eth_price": market_price['EUR']['last']
     }
-    write_to_es('2miner', global_info)
-
-def write_partial():
-    es.indices.delete(index='partial', ignore=[400, 404])
-    r = requests.get("https://api.frenchfarmers.net/partial/all")
-    result = r.json()
-    partial = []
-    for raw in result:
-        partial_raw = {
-            "launcher_id": raw["launcher_id"],
-            "difficulty": raw["difficulty"],
-            "@timestamp": raw["timestamp"]
-        }
-        write_to_es('partial', partial_raw)
-        partial.append(partial_raw)
+    write_to_elasticsearch_index('2miner', global_info)
 
 
-def write_farmer():
-    es.indices.delete(index='farmer', ignore=[400, 404])
-    r = requests.get("https://api.frenchfarmers.net/farmer/all")
-    result = r.json()
-    farmer = []
-    for raw in result:
-        farmer_raw = {
-            "launcher_id": raw["launcher_id"],
-            "difficulty": raw["difficulty"],
-            "points": raw["points"],
-            "is_pool_member": raw["is_pool_member"],
-            "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
-        }
-        write_to_es('farmer', farmer_raw)
-        farmer.append(farmer_raw)
-
-def write_stats(item, market_price):
+def write_stats(item, market_price, clock_time):
     bfound = 0
     # if item['blocksFound'] is not None: TODO: why that does not work
     #    bfound = item['blocksFound']
@@ -159,48 +144,49 @@ def write_stats(item, market_price):
         "immature": item['immature'],
         "lastShare": item['lastShare'],
         "paid": item['paid'] * bounty_factor,
-        "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+        "@timestamp": clock_time,
         "pending": item['pending'],
         "eth_price": market_price['EUR']['last']
     }
-    write_to_es('eth_stats', stats)
+    write_to_elasticsearch_index('eth_stats', stats)
 
 
-def es_connection(user, password, es_host, es_port, cert):
+def elasticsearch_connection():
     # Connect to the elastic cluster
     global es
-    context = create_default_context(cafile=cert)
+    context = create_default_context(cafile=cfg['ca_path'])
     es = Elasticsearch(
-        [es_host + ":9201", es_host + ":9202", es_host + ":9203"],
-        http_auth=(user, password),
+        [cfg['elasticsearch_host'] + ":9201", cfg['elasticsearch_host'] + ":9202", cfg['elasticsearch_host'] + ":9203"],
+        http_auth=(cfg['elasticsearch_user'], cfg['elasticsearch_password']),
         scheme="https",
-        port=es_port,
-        ssl_context=context,
+        port=cfg['elasticsearch_port'],
+        ssl_context=context
     )
     logging.info(es.info())
 
 
-def es_entry_point(walletid, user, password, es_host, es_port, cert):
-    es_connection(user, password, es_host, es_port, cert)
-
+def elasticsearch_entry_point(config):
+    global cfg
+    
+    cfg = config
+    elasticsearch_connection()
     while True:
         try:
-            currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(walletid))
+            currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(cfg['wallet']))
             logging.info('{} {}'.format(currency.status_code, currency.url))
             market_price = currency.json()
 
-            r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(walletid))
+            r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(cfg['wallet']))
             logging.info('{} {}'.format(r.status_code, r.url))
+            clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
             result = r.json()
-            write_global(result, market_price)
-            write_worker(result['workers'])
-            write_stats(result['stats'], market_price)
-            write_wallet(walletid, market_price)
-            write_pay(result['payments'])
-            write_transactions(walletid)
-            write_gas()
-#            write_farmer()
-#            write_partial()
+            write_global(result, market_price, clock_time)
+            write_worker(result['workers'], clock_time)
+            write_stats(result['stats'], market_price, clock_time)
+            write_wallet(cfg['wallet'], market_price, clock_time)
+            write_pay(result['payments'], clock_time)
+            write_transactions(cfg['wallet'], clock_time)
+            write_gas(clock_time)
             r.close()
             time.sleep(60)
         except:
