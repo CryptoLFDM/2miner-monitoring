@@ -8,8 +8,11 @@ global ETHER
 def set_etherscan_api(api_key):
     global ETHER
     requests_cache.uninstall_cache()
-    ETHER = etherscan.Client(api_key="TCSZYBB62NJHBB61NB826Z8DKYY38Y2P7G")
+    ETHER = etherscan.Client(api_key=api_key)
 
+
+def get_ether_balance(walletid):
+    logging.log(ETHER.get_eth_balances(walletid))
 
 def get_ether_transactions_by_wallet(walletid):
     return ETHER.get_transactions_by_address(walletid)

@@ -4,7 +4,10 @@ from elasticsearch import Elasticsearch
 import time
 import pytz
 import logging
+import json
 from etherscan_api import get_ether_transactions_by_wallet, get_ether_wallet_amount, get_ether_gaz_price
+from ssl import create_default_context
+
 
 factor = 0.000001
 bounty_factor = 0.000000001
@@ -15,6 +18,8 @@ Computers = {
     "Goudot": {
         "DESKTOP-T0SIC8V": "3060TI",
         "DESKTOP-S2F50O3": "3070",
+        "DESKTOP-1O4VIJC": "3070",
+        "DESKTOP-6JI75RL": "3070",
         "DESKTOP-1R35NEA": "2070",
         "DESKTOP-160G6L9": "3090",
     },
@@ -113,6 +118,36 @@ def write_global(item, market_price):
     }
     write_to_es('2miner', global_info)
 
+def write_partial():
+    es.indices.delete(index='partial', ignore=[400, 404])
+    r = requests.get("https://api.frenchfarmers.net/partial/all")
+    result = r.json()
+    partial = []
+    for raw in result:
+        partial_raw = {
+            "launcher_id": raw["launcher_id"],
+            "difficulty": raw["difficulty"],
+            "@timestamp": raw["timestamp"]
+        }
+        write_to_es('partial', partial_raw)
+        partial.append(partial_raw)
+
+
+def write_farmer():
+    es.indices.delete(index='farmer', ignore=[400, 404])
+    r = requests.get("https://api.frenchfarmers.net/farmer/all")
+    result = r.json()
+    farmer = []
+    for raw in result:
+        farmer_raw = {
+            "launcher_id": raw["launcher_id"],
+            "difficulty": raw["difficulty"],
+            "points": raw["points"],
+            "is_pool_member": raw["is_pool_member"],
+            "@timestamp": datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+        }
+        write_to_es('farmer', farmer_raw)
+        farmer.append(farmer_raw)
 
 def write_stats(item, market_price):
     bfound = 0
@@ -131,19 +166,22 @@ def write_stats(item, market_price):
     write_to_es('eth_stats', stats)
 
 
-def es_connection(user, password, es_host, es_port):
+def es_connection(user, password, es_host, es_port, cert):
     # Connect to the elastic cluster
     global es
+    context = create_default_context(cafile=cert)
     es = Elasticsearch(
-        [es_host],
+        [es_host + ":9201", es_host + ":9202", es_host + ":9203"],
         http_auth=(user, password),
+        scheme="https",
         port=es_port,
+        ssl_context=context,
     )
     logging.info(es.info())
 
 
-def es_entry_point(walletid, user, password, es_host, es_port):
-    es_connection(user, password, es_host, es_port)
+def es_entry_point(walletid, user, password, es_host, es_port, cert):
+    es_connection(user, password, es_host, es_port, cert)
 
     while True:
         try:
@@ -161,6 +199,8 @@ def es_entry_point(walletid, user, password, es_host, es_port):
             write_pay(result['payments'])
             write_transactions(walletid)
             write_gas()
+#            write_farmer()
+#            write_partial()
             r.close()
             time.sleep(60)
         except:
