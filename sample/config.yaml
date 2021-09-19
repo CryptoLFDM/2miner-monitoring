@@ -6,7 +6,7 @@ elasticsearch_host: "https://grafana.ether-source.fr"
 elasticsearch_port: 9201
 api_token_etherscan: "etherscan token api "
 log_level: INFO
-ca_path: "ssl/autority_chain.pem"
+ca_path: "../ssl/autority_chain.pem"
 
 
 #rig:

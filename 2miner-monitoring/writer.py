@@ -1,10 +1,11 @@
+import sys
+
 import requests
 from datetime import datetime
 from elasticsearch import Elasticsearch
 import time
 import pytz
 import logging
-import json
 from etherscan_api import get_ether_transactions_by_wallet, get_ether_wallet_amount, get_ether_gaz_price
 from ssl import create_default_context
 
@@ -50,16 +51,16 @@ def write_to_elasticsearch_index(index, body):
     index_name = '{}-{}-2miners-monitoring'.format(cfg['elasticsearch_user'], index)
     try:
         logging.debug(es.index(index=index_name, body=body))
-    except:
-        logging.error('unable to write on elasticsearch')
+    except Exception as e:
+        logging.error('unable to write on elasticsearch, error is {}'.format(e))
 
 
 def delete_index_elasticsearch(index):
     index_name = '{}-{}-2miners-monitoring'.format(cfg['elasticsearch_user'], index)
     try:
         logging.debug(es.indices.delete(index='transaction', ignore=[400, 404]))
-    except:
-        logging.error('Unable to delete index {}'.format(index_name))
+    except Exception as e:
+        logging.error('Unable to delete index {}, error is {}'.format(index_name, e))
 
 
 def write_pay(item, clock_time):
@@ -155,14 +156,18 @@ def elasticsearch_connection():
     # Connect to the elastic cluster
     global es
     context = create_default_context(cafile=cfg['ca_path'])
-    es = Elasticsearch(
-        [cfg['elasticsearch_host'] + ":9201", cfg['elasticsearch_host'] + ":9202", cfg['elasticsearch_host'] + ":9203"],
-        http_auth=(cfg['elasticsearch_user'], cfg['elasticsearch_password']),
-        scheme="https",
-        port=cfg['elasticsearch_port'],
-        ssl_context=context
-    )
-    logging.info(es.info())
+    try:
+        es = Elasticsearch(
+            [cfg['elasticsearch_host'] + ":9201", cfg['elasticsearch_host'] + ":9202", cfg['elasticsearch_host'] + ":9203"],
+            http_auth=(cfg['elasticsearch_user'], cfg['elasticsearch_password']),
+            scheme="https",
+            port=cfg['elasticsearch_port'],
+            ssl_context=context
+        )
+        logging.info(es.info())
+    except Exception as e:
+        logging.error('Unable to connect to es cluster, error is {}'.format(e))
+        quit()
 
 
 def elasticsearch_entry_point(config):
@@ -189,5 +194,5 @@ def elasticsearch_entry_point(config):
             write_gas(clock_time)
             r.close()
             time.sleep(60)
-        except:
-            pass
+        except Exception as e:
+            logging.error('an error has been catch, error : {}'.format(e))
