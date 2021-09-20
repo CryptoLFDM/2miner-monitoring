@@ -1,1 +1,1 @@
-C:\Users\Goudot\PycharmProjects\2miner-monitoring\venv\Scripts\python.exe C:/Users/Goudot/PycharmProjects/2miner-monitoring/2miner-monitoring/__main__.py --wallet 0x6a30a1a29afed849b182bfdf193f88d95f0d5b8e --user api_writer --password api_writer --api_token_etherscan TCSZYBB62NJHBB61NB826Z8DKYY38Y2P7G
+C:\Users\Goudot\PycharmProjects\2miner-monitoring\venv\Scripts\python.exe C:/Users/Goudot/PycharmProjects/2miner-monitoring/2miner-monitoring/__main__.py

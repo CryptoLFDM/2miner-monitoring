@@ -13,8 +13,9 @@ def set_log_lvl(log_lvl):
         return logging.INFO
     return logging.debug
 
+
 @click.command()
-@click.option('--config_file', '-c')
+@click.option('--config_file', '-c', default='../sample/config.yaml')
 def main(config_file):
     click.echo("{}".format(config_file))
 
@@ -24,10 +25,10 @@ def main(config_file):
             config = yaml.safe_load(stream)
             logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl(config['log_level']))
             logging.info('Conf file {} succefully loaded'.format(config_file))
-        except:
+        except Exception as e:
             logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl(config['INFO']))
-            logging.error('Unable to open file {}'.format(config_file))
-            pass
+            logging.error('Unable to open file {}, error: {}'.format(config_file, e))
+            quit()
     set_etherscan_api(config['api_token_etherscan'])
     elasticsearch_entry_point(config)
 
