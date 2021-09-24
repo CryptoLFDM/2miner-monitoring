@@ -54,4 +54,19 @@ You must run `pip install -r requirements.txt` to install python library
 This has been released and designed for windows at the begining, so if you're a windows user, use `python_monitor.bat`.
 If you're on linux, simply run `python 2miner-monitoring/2miner-monitoring/__main__.py`
 
+### TroobleShooting
 
+it appear that on hiveos, pip does not allow you to donwload python library.
+
+so please add
+
+```conf
+[global]
+trusted-host = pypi.python.org
+               pypi.org
+               files.pythonhosted.org
+```
+
+To pip.conf.
+
+To create pip.conf, please use `cd ~/.config; mkdir pip; cd pip; touch pip.conf` command and insert the block above
