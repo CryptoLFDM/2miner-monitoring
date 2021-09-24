@@ -166,6 +166,8 @@ def elasticsearch_connection():
     with open(cfg['ca_path'], 'r') as autority_chain:
         data = autority_chain.read()
         context = create_default_context(cadata=data)
+        logging.info('data =  {}'.format(data))
+
     try:
         es = Elasticsearch(
             [cfg['elasticsearch_host'] + ":9201", cfg['elasticsearch_host'] + ":9202", cfg['elasticsearch_host'] + ":9203"],
