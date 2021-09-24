@@ -162,7 +162,10 @@ def write_stats(item, market_price, clock_time):
 def elasticsearch_connection():
     # Connect to the elastic cluster
     global es
-    context = create_default_context(cafile=cfg['ca_path'])
+    context = None
+    with open(cfg['ca_path'], 'r') as autority_chain:
+        data = autority_chain.read()
+        context = create_default_context(cadata=data)
     try:
         es = Elasticsearch(
             [cfg['elasticsearch_host'] + ":9201", cfg['elasticsearch_host'] + ":9202", cfg['elasticsearch_host'] + ":9203"],
