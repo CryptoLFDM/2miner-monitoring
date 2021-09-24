@@ -30,19 +30,19 @@ ca_path: "../ssl/autority_chain.pem"
 # This part is to harvest correct information on your rig. This is an experimental way to collectd rig information
 # I Do not have ay rig actually, i'm building my own, so i'm gonna improve this part
 
-#rig: This si the main struct of your rigs
-#- rig_name: "DESKTOP-TFG67DF"   Set the name of your rig (should be the same as worker in 2miners)
-#  cards: ["3060TI"]  list of cards in rig. Set a list of cards inside of the rig ["3060TI", "3070"]
-#  owners:             dict of owner of the rig. 
-#   - name: "Mozquito"   name of the owner. Set here the list of owner, if you are alone just set yourself or whatever.
-#     ratio: 100         % of ownership. Set here The % of ownership of this uer
-#- rig_name: "Rig_chamber":
-#  cards: ["3070", "3070", "3070", "3070"]
-#  owners:
-#   - name: "Mozquito"
-#     ratio: 73
-#   - name: "Baby Mozquito"
-#     ratio: 23
+rig: This si the main struct of your rigs
+- rig_name: "DESKTOP-TFG67DF"   Set the name of your rig (should be the same as worker in 2miners)
+  cards: ["3060TI"]  list of cards in rig. Set a list of cards inside of the rig ["3060TI", "3070"]
+  owners:             dict of owner of the rig. 
+   - name: "Mozquito"   name of the owner. Set here the list of owner, if you are alone just set yourself or whatever.
+     ratio: 100         % of ownership. Set here The % of ownership of this uer
+- rig_name: "Rig_chamber":
+  cards: ["3070", "3070", "3070", "3070"]
+  owners:
+   - name: "Mozquito"
+     ratio: 73
+   - name: "Baby Mozquito"
+     ratio: 23
 ```
 
 ### Install requirement
