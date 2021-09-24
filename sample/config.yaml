@@ -1,0 +1,22 @@
+wallet: ""
+elasticsearch_user: ""
+elasticsearch_password: ""
+elasticsearch_host: "https://grafana.ether-source.fr"
+elasticsearch_port: 9201
+api_token_etherscan: ""
+log_level: INFO
+ca_path: "../ssl/autority_chain.pem"
+
+#rig:
+#- rig_name: "DESKTOP-TFG67DF"   set key as nam rig
+#  cards: ["3060TI"]  list of cards in rig.
+#  owners:             dict of owner of the rig
+#   - name: "Mozquito"   name of the owner
+#     ratio: 100         % of ownership
+#- rig_name: "Rig_chamber":
+#  cards: ["3070", "3070", "3070", "3070"]
+#  owners:
+#   - name: "Mozquito"
+#     ratio: 73
+#   - name: "Baby Mozquito"
+#     ratio: 23
