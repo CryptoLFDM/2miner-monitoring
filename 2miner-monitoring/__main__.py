@@ -24,7 +24,7 @@ def main(config_file):
             logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl(config['log_level']))
             logging.info('Conf file {} succefully loaded'.format(config_file))
         except Exception as e:
-            logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl(config['log_level']))
+            logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=set_log_lvl('INFO'))
             logging.error('Unable to open file {}, error: {}'.format(config_file, e))
             quit()
     main_loop(config)
