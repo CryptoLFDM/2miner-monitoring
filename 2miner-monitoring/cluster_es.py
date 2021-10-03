@@ -16,7 +16,7 @@ def write_to_elasticsearch_index(index, body):
 def delete_index_elasticsearch(index):
     index_name = '{}-{}-2miners-monitoring'.format(orchestrator.config['elasticsearch_user'], index)
     try:
-        logging.debug(es.indices.delete(index='transaction', ignore=[400, 403, 404]))
+        logging.debug(es.indices.delete(index=index_name, ignore=[400, 404]))
     except Exception as e:
         logging.error('Unable to delete index {}, error is {}'.format(index_name, e))
 

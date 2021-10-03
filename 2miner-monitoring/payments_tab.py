@@ -6,11 +6,11 @@ import orchestrator
 
 def write_payments(item):
     delete_index_elasticsearch('payments')
-    for payment in item:        
+    for payment in item:
         payment_raw = {
             "amount": payment['amount'] * orchestrator.gas_factor,
-            "tx": payment['tx'],
-            "txFee": payment['txFee'],
+            "tx": str(payment['tx']),
+            "txFee": payment['txFee'] * orchestrator.gas_factor,
             "@timestamp": datetime.fromtimestamp(payment['timestamp'], pytz.UTC).isoformat(),
             "walletid": orchestrator.config['wallet']
         }

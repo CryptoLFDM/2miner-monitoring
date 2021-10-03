@@ -7,7 +7,7 @@ import pytz
 def write_rewards(item):
     delete_index_elasticsearch('rewards')
     for reward in item:
-        sumreward_raw = {
+        reward_raw = {
             "blockheight": reward['blockheight'],
             "reward": reward['reward'] * orchestrator.gas_factor,
             "percent": reward['percent'],
@@ -17,7 +17,7 @@ def write_rewards(item):
             "@timestamp": datetime.fromtimestamp(reward['timestamp'], pytz.UTC).isoformat(),
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('rewards', sumreward_raw)
+        write_to_elasticsearch_index('rewards', reward_raw)
 
 
 def write_sumrewards(item):

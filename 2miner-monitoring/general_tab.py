@@ -29,7 +29,7 @@ def write_transactions(walletid):
             "to": transaction['to'],
             "from": transaction['from'],
             "gas_price": transaction['gas_price'],
-            "gas_used": transaction['gas_used'],
+            "gas_used": transaction['gas_used'] * orchestrator.gas_factor,
             "is_error": transaction['is_error'],
             "walletid": orchestrator.config['wallet']
         }
@@ -59,7 +59,7 @@ def write_worker(item):
     for miner in item:
         farm = {
             "Miner": miner,
-            "lastBeat": item[miner]['lastBeat'],
+            "lastBeat": datetime.fromtimestamp(item[miner]['lastBeat'], pytz.UTC).isoformat(),
             "sharesValid": item[miner]['sharesValid'],
             "sharesInvalid": item[miner]['sharesInvalid'],
             "sharesStale": item[miner]['sharesStale'],
@@ -81,8 +81,8 @@ def write_global(item):
         "workersOnline": item['workersOnline'],
         "workersOffline": item['workersOffline'],
         "workersTotal": item['workersTotal'],
-        "currentLuck": item['currentLuck'],
-        "24hreward": item['24hreward'],
+        "currentLuck": float(item['currentLuck']),
+        "24hreward": item['24hreward'] * orchestrator.gas_factor,
         "24hnumreward": item['24hnumreward'],
         "paymentsTotal": item['paymentsTotal'],
         "roundShares": item['roundShares'],
@@ -101,7 +101,7 @@ def write_stats(item):
         "blocksFound": item['blocksFound'],
         "immature": item['immature'],
         "gas": item['gas'],
-        "lastShare": item['lastShare'],
+        "lastShare": datetime.fromtimestamp(item['lastShare'], pytz.UTC).isoformat(),
         "paid": item['paid'] * orchestrator.gas_factor,
         "@timestamp": orchestrator.clock_time,
         "pending": item['pending'],
