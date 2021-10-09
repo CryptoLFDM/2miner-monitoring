@@ -25,18 +25,26 @@ def main_loop(cfg):
     config = cfg
     elasticsearch_connection()
     set_etherscan_api(config['api_token_etherscan'])
+    url_eth_price = 'https://blockchain.info/ticker?base=ETH'
     while True:
-        currency = requests.get('https://blockchain.info/ticker?base=ETH'.format(config['wallet']))
-        global market_price
-        market_price = currency.json()
-        r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(config['wallet']))
-        logging.debug('{} {}'.format(r.status_code, r.url))
-        global clock_time
-        clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
-        result = r.json()
-        r.close()
-        harvest_general_tab(result)
-        harvest_settings_tab(result['config'])
-        harvest_payments_tab(result['payments'])
-        harvest_rewards_tab(result)
+        try:
+            currency = requests.get(url_eth_price)
+            global market_price
+            market_price = currency.json()
+        except Exception as e:
+            logging.error('unable to get info from {}, with error {}'.format(url_eth_price, e))
+        try:
+            r = requests.get('https://eth.2miners.com/api/accounts/{}'.format(config['wallet']))
+            logging.debug('{} {}'.format(r.status_code, r.url))
+            global clock_time
+            clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat(),
+            result = r.json()
+            harvest_general_tab(result)
+            harvest_settings_tab(result['config'])
+            harvest_payments_tab(result['payments'])
+            harvest_rewards_tab(result)
+            del result
+            r.close()
+        except Exception as e:
+            logging.error('error during orchestrator: {}'.format(e))
         time.sleep(60)
