@@ -1,11 +1,11 @@
-from cluster_es import write_to_elasticsearch_index, delete_index_elasticsearch
+from cluster_es import es_write, es_delete
 import orchestrator
 from datetime import datetime
 import pytz
 
 
-def write_rewards(item):
-    delete_index_elasticsearch('rewards')
+async def write_rewards(item):
+    await es_delete('rewards')
     for reward in item:
         reward_raw = {
             "blockheight": reward['blockheight'],
@@ -17,10 +17,10 @@ def write_rewards(item):
             "@timestamp": datetime.fromtimestamp(reward['timestamp'], pytz.UTC).isoformat(),
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('rewards', reward_raw)
+        await es_write('rewards', reward_raw)
 
 
-def write_sumrewards(item):
+async def write_sumrewards(item):
     for sumreward in item:
         sumreward_raw = {
             "inverval": sumreward['inverval'],
@@ -30,9 +30,9 @@ def write_sumrewards(item):
             "@timestamp": orchestrator.clock_time,
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('sumrewards', sumreward_raw)
+        await es_write('sumrewards', sumreward_raw)
 
 
-def harvest_rewards_tab(result):
-    write_rewards(result['rewards'])
-    write_sumrewards(result['sumrewards'])
+async def harvest_rewards_tab(result):
+    await write_rewards(result['rewards'])
+    await write_sumrewards(result['sumrewards'])

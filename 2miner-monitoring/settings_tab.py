@@ -1,4 +1,4 @@
-from cluster_es import write_to_elasticsearch_index
+from cluster_es import es_write
 import orchestrator
 
 
@@ -11,7 +11,7 @@ def write_settings(item):
         "minPayout": item['minPayout'] * orchestrator.gas_factor,
         "walletid": orchestrator.config['wallet']
     }
-    write_to_elasticsearch_index('settings', settings)
+    es_write('settings', settings)
 
 
 def harvest_settings_tab(settings):

@@ -1,13 +1,13 @@
 from etherscan_api import get_ether_transactions_by_wallet, get_ether_wallet_amount, get_ether_gaz_price
-from cluster_es import delete_index_elasticsearch, write_to_elasticsearch_index
+from cluster_es import es_delete, es_write
 from datetime import datetime
 import pytz
 import orchestrator
 from utils import get_gpus, get_owners
 
 
-def write_pay(item):
-    delete_index_elasticsearch(index='bounty')
+async def write_pay(item):
+    await es_delete(index='bounty')
     for pay in item:
 
         bounty = {
@@ -15,11 +15,11 @@ def write_pay(item):
             "@timestamp": orchestrator.clock_time,
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('bounty', bounty)
+        await es_write('bounty', bounty)
 
 
-def write_transactions(walletid):
-    delete_index_elasticsearch(index='transaction')
+async def write_transactions(walletid):
+    await es_delete(index='transaction')
     transactions = get_ether_transactions_by_wallet(walletid)
     for transaction in transactions:
         writable_transaction = {
@@ -33,29 +33,29 @@ def write_transactions(walletid):
             "is_error": transaction['is_error'],
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('transaction', writable_transaction)
+        await es_write('transaction', writable_transaction)
 
 
-def write_gas():
+async def write_gas():
     gas = {
         "@timestamp": orchestrator.clock_time,
         "gas_price": get_ether_gaz_price() * orchestrator.gas_factor,
         "walletid": orchestrator.config['wallet']
     }
-    write_to_elasticsearch_index('gas', gas)
+    await es_write('gas', gas)
 
 
-def write_wallet(walletid):
+async def write_wallet(walletid):
     wallet = {
         "ether_amount": get_ether_wallet_amount(walletid) * orchestrator.ether_factor,
         "ether_current_price": orchestrator.market_price['EUR']['last'],
         "@timestamp": orchestrator.clock_time,
         "walletid": orchestrator.config['wallet']
     }
-    write_to_elasticsearch_index('wallet', wallet)
+    await es_write('wallet', wallet)
 
 
-def write_worker(item):
+async def write_worker(item):
     for miner in item:
         farm = {
             "Miner": miner,
@@ -70,10 +70,10 @@ def write_worker(item):
             "gpu": get_gpus(miner),
             "walletid": orchestrator.config['wallet']
         }
-        write_to_elasticsearch_index('miner', farm)
+        await es_write('miner', farm)
 
 
-def write_global(item):
+async def write_global(item):
     global_info = {
         "Global_hashrate": item['currentHashrate'] * orchestrator.factor,
         "paiement": item['paymentsTotal'],
@@ -92,10 +92,10 @@ def write_global(item):
         "eth_price": orchestrator.market_price['EUR']['last'],
         "walletid": orchestrator.config['wallet']
     }
-    write_to_elasticsearch_index('2miner', global_info)
+    await es_write('2miner', global_info)
 
 
-def write_stats(item):
+async def write_stats(item):
     stats = {
         "balance": item['balance'] * orchestrator.gas_factor,
         "blocksFound": item['blocksFound'],
@@ -108,14 +108,14 @@ def write_stats(item):
         "eth_price": orchestrator.market_price['EUR']['last'],
         "walletid": orchestrator.config['wallet']
     }
-    write_to_elasticsearch_index('eth_stats', stats)
+    await es_write('eth_stats', stats)
 
 
-def harvest_general_tab(general_tab):
-    write_global(general_tab)
-    write_worker(general_tab['workers'])
-    write_stats(general_tab['stats'])
-    write_wallet(orchestrator.config['wallet'])
-    write_pay(general_tab['payments'])
-    write_transactions(orchestrator.config['wallet'])
-    write_gas()
+async def harvest_general_tab(general_tab):
+    await write_global(general_tab)
+    await write_worker(general_tab['workers'])
+    await write_stats(general_tab['stats'])
+    await write_wallet(orchestrator.config['wallet'])
+    await write_pay(general_tab['payments'])
+    await write_transactions(orchestrator.config['wallet'])
+    await write_gas()
