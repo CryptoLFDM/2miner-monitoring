@@ -1,15 +1,17 @@
 import orchestrator
 import logging
+import aiohttp
 
 
-async def do_async_req(session, url, wallet=None):
-    async with session.get(url) as resp:
-        r = await resp.json()
-        if wallet is not None:
-            r['wallet'] = wallet
-            await orchestrator.process_miner(r)
-        else:
-            return r
+async def do_async_req(url, wallet=None):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            r = await resp.json()
+            if wallet is not None:
+                r['wallet'] = wallet
+                await orchestrator.process_miner(r)
+            else:
+                return r
 
 
 def get_rig_info(rig_name):

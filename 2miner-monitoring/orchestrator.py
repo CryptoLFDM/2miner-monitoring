@@ -41,7 +41,7 @@ def main_loop(cfg):
     iterator = 0
     asyncio.run(es_connection())
     global market_price
-    market_price = asyncio.run(eth_price())
+    market_price = await eth_price()
     while True:
         if config['include_all_miners'] == "True":
             all_miners = asyncio.run(harvest_miners_adresses())

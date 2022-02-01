@@ -1,7 +1,5 @@
 import asyncio
 import aiohttp
-import http3
-import logging
 from utils import do_async_req
 
 
