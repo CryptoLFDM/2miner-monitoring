@@ -7,7 +7,9 @@ async def do_async_req(session, url, wallet=None):
         r = await resp.json()
         if wallet is not None:
             r['wallet'] = wallet
-        return r
+            await orchestrator.process_miner(r)
+        else:
+            return r
 
 
 def get_rig_info(rig_name):

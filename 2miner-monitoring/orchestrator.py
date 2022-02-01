@@ -52,9 +52,7 @@ def main_loop(cfg):
                 market_price = asyncio.run(eth_price())
             global clock_time
             clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
-            miners = asyncio.run(harvest_miners(iterator, all_miners))
-            for miner in miners:
-                asyncio.run(process_miner(miner))
+            asyncio.run(harvest_miners(iterator, all_miners))
             iterator = iterator + 1
         except:
             pass

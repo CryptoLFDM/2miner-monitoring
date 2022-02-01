@@ -21,8 +21,7 @@ async def harvest_miners(iterator, all_miners):
                 "collected {} at {}. Iterator = {}, miner = {}, duration = {}, loop_duration = {}".format(wallet, datetime.now(), iterator,
                                                                                          iterator_miner, time.time() - start_time,  time.time() - loop_start_time))
             iterator_miner = iterator_miner + 1
-        miners = await asyncio.gather(*tasks)
-    return miners
+        await asyncio.gather(*tasks)
 
 
 async def harvest_miners_adresses():
