@@ -111,7 +111,7 @@ async def write_stats(item, walletid):
     await es_write('eth_stats', stats)
 
 
-async def harvest_general_tab(general_tab, walletid):
+async def harvest_general_tab(general_tab):
     await write_global(general_tab)
     await write_worker(general_tab['workers'], general_tab['wallet'])
     await write_stats(general_tab['stats'], general_tab['wallet'])

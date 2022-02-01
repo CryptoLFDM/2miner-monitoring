@@ -43,17 +43,14 @@ def main_loop(cfg):
     global market_price
     market_price = asyncio.run(eth_price())
     while True:
-        try:
-            if config['include_all_miners'] == "True":
-                all_miners = asyncio.run(harvest_miners_adresses())
-            else:
-                all_miners = config['adress']
-            if datetime.now().second == 0:  # update ETH price once per minute only
-                market_price = asyncio.run(eth_price())
-            global clock_time
-            clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
-            asyncio.run(harvest_miners(iterator, all_miners))
-            iterator = iterator + 1
-        except:
-            pass
+        if config['include_all_miners'] == "True":
+            all_miners = asyncio.run(harvest_miners_adresses())
+        else:
+            all_miners = config['adress']
+        if datetime.now().second == 0:  # update ETH price once per minute only
+            market_price = asyncio.run(eth_price())
+        global clock_time
+        clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
+        asyncio.run(harvest_miners(iterator, all_miners))
+        iterator = iterator + 1
 
