@@ -6,7 +6,7 @@ def get_rig_info(rig_name):
     for rig in orchestrator.config['rig']:
         if rig['rig_name'] == rig_name:
             return rig
-    logging.warn("No rig found with name {}".format(rig_name))
+    logging.info("No rig found with name {}".format(rig_name))
     return None
 
 

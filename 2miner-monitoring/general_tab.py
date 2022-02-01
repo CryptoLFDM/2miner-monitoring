@@ -4,6 +4,7 @@ from datetime import datetime
 import pytz
 import orchestrator
 from utils import get_gpus, get_owners
+import logging
 
 
 async def write_pay(item):
@@ -96,15 +97,15 @@ async def write_global(item):
 
 
 async def write_stats(item):
+    logging.warning(item)
     stats = {
         "balance": item['balance'] * orchestrator.gas_factor,
-        "blocksFound": item['blocksFound'],
         "immature": item['immature'],
-        "gas": item['gas'],
+#        "gas": item['gas'],
         "lastShare": datetime.fromtimestamp(item['lastShare'], pytz.UTC).isoformat(),
-        "paid": item['paid'] * orchestrator.gas_factor,
+ #       "paid": item['paid'] * orchestrator.gas_factor,
         "@timestamp": orchestrator.clock_time,
-        "pending": item['pending'],
+#        "pending": item['pending'],
         "eth_price": orchestrator.market_price['EUR']['last'],
         "walletid": orchestrator.config['wallet']
     }
