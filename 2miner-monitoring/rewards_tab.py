@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 
 
-async def write_rewards(item):
+async def write_rewards(item, walletid):
     await es_delete('rewards')
     for reward in item:
         reward_raw = {
@@ -15,12 +15,12 @@ async def write_rewards(item):
             "orphan": reward['orphan'],
             "uncle": reward['uncle'],
             "@timestamp": datetime.fromtimestamp(reward['timestamp'], pytz.UTC).isoformat(),
-            "walletid": orchestrator.config['wallet']
+            "walletid": walletid
         }
         await es_write('rewards', reward_raw)
 
 
-async def write_sumrewards(item):
+async def write_sumrewards(item, walletid):
     for sumreward in item:
         sumreward_raw = {
             "inverval": sumreward['inverval'],
@@ -28,11 +28,11 @@ async def write_sumrewards(item):
             "numreward": sumreward['numreward'],
             "name": sumreward['name'],
             "@timestamp": orchestrator.clock_time,
-            "walletid": orchestrator.config['wallet']
+            "walletid": walletid
         }
         await es_write('sumrewards', sumreward_raw)
 
 
 async def harvest_rewards_tab(result):
-    await write_rewards(result['rewards'])
-    await write_sumrewards(result['sumrewards'])
+    await write_rewards(result['rewards'], result['walletid'])
+    await write_sumrewards(result['sumrewards'], result['walletid'])

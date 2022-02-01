@@ -39,27 +39,31 @@ async def bulk_to_es(bulk_item):
 
 
 async def es_write(index, body):
-    if len(body) == 0:
-        # TODO: add a better check if body is empty to avoid es co for nothing
-        logging.warning('Write on {} aborted, body is empty'.format(index))
-        return
-    now = datetime.datetime.now()
-    d1 = now.strftime("%Y.%m.%d")
-    index_name = '{}-{}-{}'.format(orchestrator.config['elasticsearch_user'], index, d1)
-    #await es_connection()
-    try:
-        logging.debug(await es.index(index=index_name, body=body))
-    except Exception as e:
-        logging.error('{}'.format(e))
+    pass
 
+# async def es_write(index, body):
+#     if len(body) == 0:
+#         # TODO: add a better check if body is empty to avoid es co for nothing
+#         logging.warning('Write on {} aborted, body is empty'.format(index))
+#         return
+#     now = datetime.datetime.now()
+#     d1 = now.strftime("%Y.%m.%d")
+#     index_name = '{}-{}-{}'.format(orchestrator.config['elasticsearch_user'], index, d1)
+#     try:
+#         logging.debug(await es.index(index=index_name, body=body))
+#     except Exception as e:
+#         logging.error('{}'.format(e))
 
 async def es_delete(index):
-    index_name = '{}-{}-2miners-monitoring'.format(orchestrator.config['elasticsearch_user'], index)
-    #await es_connection()
-    try:
-        await es.indices.delete(index=index_name, ignore=[400, 404])
-    except Exception as e:
-        logging.error('{}'.format(e))
+    pass
+
+
+# async def es_delete(index):
+#     index_name = '{}-{}-2miners-monitoring'.format(orchestrator.config['elasticsearch_user'], index)
+#     try:
+#         await es.indices.delete(index=index_name, ignore=[400, 404])
+#     except Exception as e:
+#         logging.error('{}'.format(e))
 
 
 async def es_connection():

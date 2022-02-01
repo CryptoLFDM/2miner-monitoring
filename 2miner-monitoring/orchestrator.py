@@ -26,12 +26,12 @@ gas_factor = 0.000000001
 
 async def process_miner(miner_info):
     start = time.time()
-    logging.warning('processing of {} at {}'.format(miner_info, datetime.now()))
+    logging.warning('processing of {} at {}'.format(miner_info['wallet'], datetime.now()))
     await harvest_general_tab(miner_info)
-    await harvest_settings_tab(miner_info['config'])
-    await harvest_payments_tab(miner_info['payments'])
+    await harvest_settings_tab(miner_info['config'], miner_info['wallet'])
+    await harvest_payments_tab(miner_info['payments'], miner_info['wallet'])
     await harvest_rewards_tab(miner_info)
-    logging.warning('end of {} at {}. Duration : {}'.format(miner_info, datetime.now(), time.time() - start))
+    logging.warning('end of {} at {}. Duration : {}'.format(miner_info['wallet'], datetime.now(), time.time() - start))
 
 
 def main_loop(cfg):
@@ -40,14 +40,20 @@ def main_loop(cfg):
     set_etherscan_api(config['api_token_etherscan'])
     iterator = 0
     asyncio.run(es_connection())
+    global market_price
+    market_price = asyncio.run(eth_price())
     while True:
-        all_miners = asyncio.run(harvest_miners_adresses())
-        global market_price
-        market_price = asyncio.run(eth_price())
-        global clock_time
-        clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
-        miners = asyncio.run(harvest_miners(iterator, all_miners))
-        for miner in miners:
-            asyncio.run(process_miner(miner))
-        logging.warning("Bridge open, interval is {} min".format(config['interval']))
-        iterator = iterator + 1
+        try:
+            if config['include_all_miners'] == "True":
+                all_miners = asyncio.run(harvest_miners_adresses())
+            if datetime.now().second == 0:  # update ETH price once per minute only
+                market_price = asyncio.run(eth_price())
+            global clock_time
+            clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
+            miners = asyncio.run(harvest_miners(iterator, config['adress']))
+            for miner in miners:
+                asyncio.run(process_miner(miner))
+            iterator = iterator + 1
+        except:
+            pass
+

@@ -11,5 +11,4 @@ async def eth_price():
         url = 'https://blockchain.info/ticker?base=ETH'
         tasks.append(asyncio.ensure_future(do_async_req(session, url)))
         price = await asyncio.gather(*tasks)
-        await session.close()
-    return price
+    return price[0]

@@ -2,9 +2,11 @@ import orchestrator
 import logging
 
 
-async def do_async_req(session, url):
+async def do_async_req(session, url, wallet=None):
     async with session.get(url) as resp:
         r = await resp.json()
+        if wallet is not None:
+            r['wallet'] = wallet
         return r
 
 
