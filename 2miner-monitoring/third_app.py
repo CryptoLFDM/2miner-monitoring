@@ -1,15 +1,15 @@
+import asyncio
+import aiohttp
 import http3
 import logging
+from utils import do_async_req
 
 
 async def eth_price():
-    client = http3.AsyncClient()
-    try:
-        r = await client.get('https://blockchain.info/ticker?base=ETH')
-        logging.debug('{} {}'.format(r.status_code, r.url))
-        result = r.json()
-        await client.close()
-        return result
-    except Exception as e:
-        await client.close()
-        logging.error('Unable to get eth price from blockchain.info: {}'.format(e))
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        url = 'https://blockchain.info/ticker?base=ETH'
+        tasks.append(asyncio.ensure_future(do_async_req(session, url)))
+        price = await asyncio.gather(*tasks)
+        await session.close()
+    return price

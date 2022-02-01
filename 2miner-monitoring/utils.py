@@ -2,6 +2,12 @@ import orchestrator
 import logging
 
 
+async def do_async_req(session, url):
+    async with session.get(url) as resp:
+        r = await resp.json()
+        return r
+
+
 def get_rig_info(rig_name):
     for rig in orchestrator.config['rig']:
         if rig['rig_name'] == rig_name:

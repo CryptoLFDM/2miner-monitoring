@@ -62,7 +62,7 @@ async def es_delete(index):
         logging.error('{}'.format(e))
 
 
-def es_connection():
+async def es_connection():
     # Connect to the elastic cluster
     global es
     context = create_default_context(cafile=orchestrator.config['ca_path'])
@@ -73,4 +73,4 @@ def es_connection():
             port=orchestrator.config['elasticsearch_port'],
             ssl_context=context
         )
-    logging.debug(es.info())
+    logging.debug(await es.info())
