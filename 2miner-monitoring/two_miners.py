@@ -14,11 +14,11 @@ async def harvest_miners(iterator, all_miners):
         for wallet in all_miners:
             loop_start_time = time.time()
             logging.warning(
-                "start of miners loops at {}. Iterator = {}, miner = {}".format(datetime.now(), iterator, iterator_miner))
+                "collecting {} at {}. Iterator = {}, miner = {}".format(wallet, datetime.now(), iterator, iterator_miner))
             url = f'https://eth.2miners.com/api/accounts/{wallet}'
             tasks.append(asyncio.ensure_future(do_async_req(session, url, wallet)))
             logging.warning(
-                "end of miners loops at {}. Iterator = {}, miner = {}, duration = {}, loop_duration = {}".format(datetime.now(), iterator,
+                "collected {} at {}. Iterator = {}, miner = {}, duration = {}, loop_duration = {}".format(wallet, datetime.now(), iterator,
                                                                                          iterator_miner, time.time() - start_time,  time.time() - loop_start_time))
             iterator_miner = iterator_miner + 1
         miners = await asyncio.gather(*tasks)

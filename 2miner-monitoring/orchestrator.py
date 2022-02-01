@@ -46,11 +46,13 @@ def main_loop(cfg):
         try:
             if config['include_all_miners'] == "True":
                 all_miners = asyncio.run(harvest_miners_adresses())
+            else:
+                all_miners = config['adress']
             if datetime.now().second == 0:  # update ETH price once per minute only
                 market_price = asyncio.run(eth_price())
             global clock_time
             clock_time = datetime.fromtimestamp(time.time(), pytz.UTC).isoformat()
-            miners = asyncio.run(harvest_miners(iterator, config['adress']))
+            miners = asyncio.run(harvest_miners(iterator, all_miners))
             for miner in miners:
                 asyncio.run(process_miner(miner))
             iterator = iterator + 1
