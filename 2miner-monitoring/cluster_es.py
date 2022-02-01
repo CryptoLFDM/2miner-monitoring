@@ -2,11 +2,15 @@ from elasticsearch import Elasticsearch
 from ssl import create_default_context
 import logging
 import orchestrator
+import datetime
+
 es = None
 
 
 def write_to_elasticsearch_index(index, body):
-    index_name = '{}-{}-2miners-monitoring'.format(orchestrator.config['elasticsearch_user'], index)
+    now = datetime.datetime.now()
+    d1 = now.strftime("%Y.%m.%d")
+    index_name = '{}-{}-{}'.format(orchestrator.config['elasticsearch_user'], index, d1)
     try:
         logging.debug(es.index(index=index_name, body=body))
     except Exception as e:
@@ -27,7 +31,7 @@ def elasticsearch_connection():
     try:
         global es
         es = Elasticsearch(
-            [orchestrator.config['elasticsearch_host'] + ":9201", orchestrator.config['elasticsearch_host'] + ":9202", orchestrator.config['elasticsearch_host'] + ":9203"],
+            hosts=orchestrator.config['elasticsearch_hosts'],
             http_auth=(orchestrator.config['elasticsearch_user'], orchestrator.config['elasticsearch_password']),
             scheme="https",
             port=orchestrator.config['elasticsearch_port'],
